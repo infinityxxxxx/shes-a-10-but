@@ -81,12 +81,6 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
       <h2>Score scale</h2>
       <div class="row"><button class="chip" id="tz" aria-pressed="false">Add 0 tick mark (really bad)</button><button class="chip" id="te" aria-pressed="false">Add 11 tick mark (really good)</button></div>
     </div>
-    <div class="panel" style="margin-top:14px">
-      <h2>Your own "buts"</h2>
-      <p class="dim" style="margin:0">Write the part after "but", like "she laughs at her own jokes". Saved on this phone only.</p>
-      <div class="row" style="flex-wrap:nowrap"><input id="cname" placeholder="she..." maxlength="120" autocomplete="off"><button id="cadd" style="flex:none">Add</button></div>
-      <div id="clist" class="row"></div>
-    </div>
   </section>
   <section id="settings" hidden>
     <h1>Settings</h1>
@@ -108,7 +102,7 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
 const L = GameLogic, D = GAME_DATA, KEY = 'shes-a-10-but-v1';
 const $ = id => document.getElementById(id);
 const rnd = Math.random;
-const def = { theme:'midnight', pron:'she', cats:[], custom:[], zero:false, eleven:false };
+const def = { theme:'midnight', pron:'she', cats:[], zero:false, eleven:false };
 let S;
 let saved0 = {};
 try { saved0 = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; S = Object.assign({}, def, saved0); } catch(e) { S = Object.assign({}, def); }
@@ -150,20 +144,12 @@ function renderHome(){
     cs.append(b);
   }
   $('tz').setAttribute('aria-pressed', String(!!S.zero)); $('te').setAttribute('aria-pressed', String(!!S.eleven));
-  const cl = $('clist'); cl.replaceChildren();
-  S.custom.forEach((t,i) => {
-    const x = el('button', {class:'x','aria-label':'Remove'}, '×');
-    x.onclick = () => { S.custom.splice(i,1); save(); renderHome(); };
-    cl.append(el('span', {class:'chip'}, t+' ', x));
-  });
   const ok = items().length > 0;
   $('m1').disabled = $('m2').disabled = !ok;
 }
 
 function items(){
-  const base = L.pool(D, S.cats);
-  const cus = S.custom.map((t,i) => ({ id:'c:'+i+t, cat:'custom', delta:null, tpl:t }));
-  return base.concat(cus);
+  return L.pool(D, S.cats);
 }
 
 const stage = $('stage');
@@ -257,11 +243,8 @@ $('settingsBtn').onclick = () => { $('home').hidden = true; $('settings').hidden
 $('settingsBack').onclick = home;
 $('all').onclick = () => { S.cats = Object.keys(D); save(); renderHome(); };
 $('none').onclick = () => { S.cats = []; save(); renderHome(); };
-function addCustom(){ const v = $('cname').value.trim(); if (v && S.custom.length < 100) { S.custom.push(v); $('cname').value=''; save(); renderHome(); } }
-$('cadd').onclick = addCustom;
 $('tz').onclick = () => { S.zero = !S.zero; save(); renderHome(); };
 $('te').onclick = () => { S.eleven = !S.eleven; save(); renderHome(); };
-$('cname').onkeydown = e => { if (e.key === 'Enter') addCustom(); };
 renderHome();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();

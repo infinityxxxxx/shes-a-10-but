@@ -34,6 +34,6 @@ assert.strictEqual(ids.size, all.length, 'every item seen once before repeating'
 assert.strictEqual(L.aNum(8), 'an 8');
 assert.strictEqual(L.aNum(10), 'a 10');
 assert.strictEqual(L.RATE_START, 10);
-const fl = L.flaws(L.pool(D, Object.keys(D)).concat([{ id: 'c', delta: null, tpl: 'x' }]));
-assert(fl.length > 0 && fl.every(t => t.delta === null || t.delta < 0), 'Rate It only uses flaws');
+const fl = L.flaws(L.pool(D, Object.keys(D)));
+assert(fl.length > 0 && fl.every(t => t.delta < 0), 'Rate It only uses flaws');
 console.log('ok', all.length, 'traits');

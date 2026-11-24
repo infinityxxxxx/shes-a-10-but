@@ -55,9 +55,9 @@
   // "a" or "an" before a number: "an 8", "a 10".
   const aNum = n => (n === 8 || n === 11 || n === 18 ? 'an ' : 'a ') + n;
 
-  // Rate It always opens at 10 and only uses flaws (negative traits) and custom buts.
+  // Rate It always opens at 10 and only uses flaws (negative traits).
   const RATE_START = 10;
-  const flaws = items => items.filter(i => i.delta === null || i.delta < 0);
+  const flaws = items => items.filter(i => i.delta < 0);
 
   const api = { PRON, render, clamp, pool, startFor, pick, guessPoints, aNum, RATE_START, flaws };
   if (typeof module !== 'undefined') module.exports = api; else g.GameLogic = api;

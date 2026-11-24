@@ -11,7 +11,6 @@ A party game for one shared phone, based on the "She's a 10, but..." trend. No a
 
 - 176 built-in "buts" in 9 categories (Funny, Red flags, Gross, Spicy, Food, School, Chaotic, Wholesome, Tech). Pick the ones you want, like in Would You Rather
 - She's / He's / They're toggle
-- Your own "buts", saved on this phone
 
 ## Run locally
 
