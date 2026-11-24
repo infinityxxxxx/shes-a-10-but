@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f1220">
+<meta name="description" content="She's a 10, but... A party game for one shared phone. Works offline. No accounts, no ads.">
+<title>She's a 10, but...</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{color-scheme:dark;--bg:#0f1220;--panel:#1b2036;--text:#f2f4ff;--dim:#9aa3c7;--accent:#ff4d6d;--gold:#ffd166;--ok:#4dd6a4;--line:#2c3354;--out:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:17px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button{font:inherit;color:var(--text);border:0;border-radius:14px;padding:14px;cursor:pointer;touch-action:manipulation;transition:transform 150ms var(--out),opacity .2s;background:var(--panel)}
+button:active:not(:disabled){transform:scale(.97)}
+button:disabled{opacity:.35;cursor:default}
+input{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;width:100%;min-width:0;-webkit-user-select:text;user-select:text}
+main{max-width:520px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 18px max(24px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;min-height:100vh;min-height:100dvh}
+h1{margin:6px 0 0;font-size:30px;line-height:1.1;text-align:center}
+h1 b{color:var(--accent)}
+h2{margin:0;font-size:15px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.sub{text-align:center;color:var(--dim);margin:0}
+.panel{background:var(--panel);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.primary{background:var(--accent);font-weight:700;padding:16px}
+.mode{display:block;text-align:left;padding:16px;border:1px solid var(--line)}
+.mode strong{display:block;font-size:19px}
+.mode span{color:var(--dim);font-size:15px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:9px 13px;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-size:15px}
+.chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);font-weight:600}
+.seg{flex:1;padding:10px}
+.seg[aria-pressed=true]{background:var(--accent);font-weight:700}
+.stage{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;text-align:center}
+.stage.enter>*{animation:in 250ms var(--out)}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.lead{font-size:26px;font-weight:700;line-height:1.2}
+.num{font-size:112px;font-weight:800;line-height:1;color:var(--gold)}
+.but{font-size:24px;font-weight:600}
+.verdict{font-size:20px;color:var(--ok);font-weight:700}
+.verdict.down{color:var(--accent)}
+.dim{color:var(--dim);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.grid button{font-size:24px;font-weight:700;padding:16px 0}
+.top{display:flex;justify-content:space-between;align-items:center}
+.link{background:none;color:var(--dim);padding:8px 4px}
+.score{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.score span{background:var(--panel);border-radius:999px;padding:5px 12px;font-size:14px}
+.x{background:none;padding:0 2px;color:var(--dim)}
+.tag{font-size:13px;color:var(--dim)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <section id="home">
+    <h1>She's a 10, <b>but...</b></h1>
+    <p class="sub">A party game for one shared phone.</p>
+    <div class="panel" style="margin-top:14px">
+      <button class="mode" id="m1"><strong>Rate It</strong><span>A starting number and a "but...". The group argues the new score.</span></button>
+      <button class="mode" id="m2"><strong>Guess the Number</strong><span>One player looks away. The others describe the "but" and the guesser finds the number.</span></button>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h2>Who is it about?</h2>
+      <div class="row" id="pron"></div>
+      <h2>Categories</h2>
+      <div class="row" id="cats"></div>
+      <div class="row"><button class="link" id="all">Select all</button><button class="link" id="none">Clear</button></div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h2>Players (optional, for Guess the Number scores)</h2>
+      <div class="row" style="flex-wrap:nowrap"><input id="pname" placeholder="Name" maxlength="20" autocomplete="off"><button id="padd" style="flex:none">Add</button></div>
+      <div class="row" id="plist"></div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <h2>Your own "buts"</h2>
+      <p class="dim" style="margin:0">Write the part after "but", like "she laughs at her own jokes". Saved on this phone only.</p>
+      <div class="row" style="flex-wrap:nowrap"><input id="cname" placeholder="she..." maxlength="120" autocomplete="off"><button id="cadd" style="flex:none">Add</button></div>
+      <div id="clist" class="row"></div>
+    </div>
+    <p class="dim" style="text-align:center">Pick at least one category or add your own "buts". No accounts, no ads, works offline.</p>
+  </section>
+  <section id="play" hidden style="display:flex;flex-direction:column;flex:1">
+    <div class="top"><button class="link" id="back">&larr; Menu</button><span class="tag" id="tag"></span></div>
+    <div class="stage" id="stage" aria-live="polite"></div>
+  </section>
+</main>
+<script src="questions.js"></script>
+<script src="logic.js"></script>
+<script>
+(function(){
+const L = GameLogic, D = GAME_DATA, KEY = 'shes-a-10-but-v1';
+const $ = id => document.getElementById(id);
+const rnd = Math.random;
+const def = { pron:'she', cats:[], players:[], custom:[] };
+let S;
+try { S = Object.assign({}, def, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) { S = Object.assign({}, def); }
+S.cats = (S.cats||[]).filter(c => D[c]);
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+const seen = new Set();
+let mode = 0, round = 0, scores = {};
+
+function el(tag, props, ...kids){
+  const e = document.createElement(tag);
+  for (const k in (props||{})) { if (k === 'class') e.className = props[k]; else if (k.startsWith('on')) e.addEventListener(k.slice(2), props[k]); else e.setAttribute(k, props[k]); }
+  for (const k of kids) e.append(k);
+  return e;
+}
+
+function renderHome(){
+  const pr = $('pron'); pr.replaceChildren();
+  for (const k of ['she','he','they']) {
+    const b = el('button', {class:'seg','aria-pressed':String(S.pron===k)}, L.PRON[k].label);
+    b.onclick = () => { S.pron = k; save(); renderHome(); };
+    pr.append(b);
+  }
+  const cs = $('cats'); cs.replaceChildren();
+  for (const k in D) {
+    const b = el('button', {class:'chip','aria-pressed':String(S.cats.includes(k))}, D[k].label + ' (' + D[k].traits.length + ')');
+    b.onclick = () => { S.cats = S.cats.includes(k) ? S.cats.filter(x => x!==k) : S.cats.concat(k); save(); renderHome(); };
+    cs.append(b);
+  }
+  const pl = $('plist'); pl.replaceChildren();
+  S.players.forEach((n,i) => {
+    const x = el('button', {class:'x','aria-label':'Remove '+n}, '×');
+    x.onclick = () => { S.players.splice(i,1); save(); renderHome(); };
+    pl.append(el('span', {class:'chip'}, n+' ', x));
+  });
+  const cl = $('clist'); cl.replaceChildren();
+  S.custom.forEach((t,i) => {
+    const x = el('button', {class:'x','aria-label':'Remove'}, '×');
+    x.onclick = () => { S.custom.splice(i,1); save(); renderHome(); };
+    cl.append(el('span', {class:'chip'}, t+' ', x));
+  });
+  const ok = items().length > 0;
+  $('m1').disabled = $('m2').disabled = !ok;
+}
+
+function items(){
+  const base = L.pool(D, S.cats);
+  const cus = S.custom.map((t,i) => ({ id:'c:'+i+t, cat:'custom', delta:null, tpl:t }));
+  return base.concat(cus);
+}
+
+const stage = $('stage');
+function show(...nodes){ stage.replaceChildren(...nodes); stage.classList.remove('enter'); void stage.offsetWidth; stage.classList.add('enter'); }
+const btn = (txt, fn, cls) => { const b = el('button', {class: cls||''}, txt); b.onclick = fn; return b; };
+
+function start(m){
+  mode = m; round = 0; scores = {};
+  $('home').hidden = true; $('play').hidden = false;
+  $('tag').textContent = m === 1 ? 'Rate It' : 'Guess the Number';
+  window.scrollTo(0,0);
+  m === 1 ? rate() : guessPass();
+}
+function home(){ $('play').hidden = true; $('home').hidden = false; renderHome(); }
+
+// Mode 1: Rate It
+function rate(){
+  const it = L.pick(items(), seen, rnd);
+  const text = L.render(it.tpl, S.pron);
+  const hasDelta = it.delta !== null;
+  const start = hasDelta ? L.startFor(it.delta, rnd) : 6 + Math.floor(rnd()*5);
+  show(
+    el('div', {class:'num'}, String(start)),
+    el('div', {class:'lead'}, L.PRON[S.pron].label + ' a ' + start + ', but...'),
+    el('div', {class:'but'}, text),
+    el('div', {class:'dim'}, 'Talk it out. What is the new score?'),
+    hasDelta ? btn('Reveal the verdict', () => verdict(it, start, text), 'primary') : btn('Next', rate, 'primary')
+  );
+}
+function verdict(it, start, text){
+  const end = L.clamp(start + it.delta, 0, 10);
+  const down = end < start;
+  show(
+    el('div', {class:'dim'}, start + ' then "' + text + '"'),
+    el('div', {class:'num'}, String(end)),
+    el('div', {class:'verdict' + (down?' down':'')}, end === start ? 'No change' : (down ? '▼ ' : '▲ ') + Math.abs(end-start) + ' ' + (down?'down':'up')),
+    btn('Next', rate, 'primary')
+  );
+}
+
+// Mode 2: Guess the Number
+const guesser = () => S.players.length ? S.players[round % S.players.length] : 'Guesser';
+let answer = 0;
+function scoreRow(){
+  if (!S.players.length) return null;
+  const r = el('div', {class:'score'});
+  S.players.forEach(p => r.append(el('span', {}, p + ': ' + (scores[p]||0))));
+  return r;
+}
+function guessPass(){
+  answer = Math.floor(rnd()*11);
+  show(
+    el('div', {class:'lead'}, guesser() + ', look away!'),
+    el('div', {class:'dim'}, 'Everyone else: when the guesser is not looking, tap below to see the number.'),
+    scoreRow() || '',
+    btn('Show the number to the others', guessShow, 'primary')
+  );
+}
+function guessShow(){
+  show(
+    el('div', {class:'num'}, String(answer)),
+    el('div', {class:'lead'}, L.PRON[S.pron].label + ' a ' + answer + ', but...'),
+    el('div', {class:'dim'}, 'Take turns saying the "but" that fits this number. Do not say the number out loud.'),
+    btn('Hide it. ' + guesser() + ' looks back', guessAsk, 'primary')
+  );
+}
+function guessAsk(){
+  const g = el('div', {class:'grid'});
+  for (let i = 0; i <= 10; i++) g.append(btn(String(i), () => guessEnd(i)));
+  show(
+    el('div', {class:'lead'}, guesser() + ', what number is it?'),
+    g
+  );
+}
+function guessEnd(guess){
+  const pts = L.guessPoints(guess, answer);
+  if (S.players.length) { const p = guesser(); scores[p] = (scores[p]||0) + pts; }
+  const msg = pts === 3 ? 'Exactly right! +3' : pts === 1 ? 'One off. +1' : 'Off by ' + Math.abs(guess-answer) + '. No points';
+  show(
+    el('div', {class:'dim'}, 'The number was'),
+    el('div', {class:'num'}, String(answer)),
+    el('div', {class:'verdict' + (pts?'':' down')}, 'Guess: ' + guess + '. ' + msg),
+    scoreRow() || '',
+    btn('Next round', () => { round++; guessPass(); }, 'primary')
+  );
+}
+
+$('m1').onclick = () => start(1);
+$('m2').onclick = () => start(2);
+$('back').onclick = home;
+$('all').onclick = () => { S.cats = Object.keys(D); save(); renderHome(); };
+$('none').onclick = () => { S.cats = []; save(); renderHome(); };
+function addPlayer(){ const v = $('pname').value.trim(); if (v && !S.players.includes(v) && S.players.length < 10) { S.players.push(v); $('pname').value=''; save(); renderHome(); } }
+function addCustom(){ const v = $('cname').value.trim(); if (v && S.custom.length < 100) { S.custom.push(v); $('cname').value=''; save(); renderHome(); } }
+$('padd').onclick = addPlayer; $('cadd').onclick = addCustom;
+$('pname').onkeydown = e => { if (e.key === 'Enter') addPlayer(); };
+$('cname').onkeydown = e => { if (e.key === 'Enter') addCustom(); };
+renderHome();
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
