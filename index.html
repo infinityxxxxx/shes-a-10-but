@@ -81,7 +81,7 @@ h2{margin:0;font-size:15px;color:var(--dim);font-weight:600;text-transform:upper
       <div class="row" style="flex-wrap:nowrap"><input id="cname" placeholder="she..." maxlength="120" autocomplete="off"><button id="cadd" style="flex:none">Add</button></div>
       <div id="clist" class="row"></div>
     </div>
-    <p class="dim" style="text-align:center">Pick at least one category or add your own "buts". No accounts, no ads, works offline.</p>
+    <p class="dim" style="text-align:center">All categories are on to start; turn off any you don't want, or add your own "buts". No accounts, no ads, works offline.</p>
   </section>
   <section id="play" hidden style="display:flex;flex-direction:column;flex:1">
     <div class="top"><button class="link" id="back">&larr; Menu</button><span class="tag" id="tag"></span></div>
@@ -97,8 +97,10 @@ const $ = id => document.getElementById(id);
 const rnd = Math.random;
 const def = { pron:'she', cats:[], players:[], custom:[] };
 let S;
-try { S = Object.assign({}, def, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch(e) { S = Object.assign({}, def); }
-S.cats = (S.cats||[]).filter(c => D[c]);
+let saved0 = {};
+try { saved0 = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; S = Object.assign({}, def, saved0); } catch(e) { S = Object.assign({}, def); }
+if (!Array.isArray(S.cats) || !('cats' in saved0)) S.cats = Object.keys(D);
+S.cats = S.cats.filter(c => D[c]);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
 const seen = new Set();
 let mode = 0, round = 0, scores = {};
