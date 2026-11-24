@@ -10,7 +10,13 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{color-scheme:dark;--bg:#0f1220;--panel:#1b2036;--text:#f2f4ff;--dim:#9aa3c7;--accent:#ff4d6d;--gold:#ffd166;--ok:#4dd6a4;--line:#2c3354;--out:cubic-bezier(.2,.8,.2,1)}
+:root{color-scheme:dark;--bg:#0f1220;--panel:#1b2036;--text:#f2f4ff;--dim:#9aa3c7;--accent:#ff4d6d;--gold:#ffd166;--ok:#4dd6a4;--line:#2c3354;--on:#fff;--out:cubic-bezier(.2,.8,.2,1)}
+[data-theme=ocean]{--bg:#06202e;--panel:#0d3347;--text:#eaf8ff;--dim:#8fb8cc;--accent:#14b8e6;--ok:#5eead4;--line:#17506b}
+[data-theme=forest]{--bg:#0e1a12;--panel:#17291d;--text:#eefaf0;--dim:#9bbfa4;--accent:#3fb950;--ok:#a3e635;--line:#25402d}
+[data-theme=sunset]{--bg:#1f1020;--panel:#33182f;--text:#fff1ea;--dim:#d1a3b0;--accent:#ff7a3d;--ok:#ffd166;--line:#52284a}
+[data-theme=grape]{--bg:#150f26;--panel:#241a40;--text:#f5f0ff;--dim:#b3a5d9;--accent:#a855f7;--ok:#f0abfc;--line:#3b2d66}
+[data-theme=mono]{--bg:#000;--panel:#161616;--text:#fff;--dim:#9a9a9a;--accent:#fff;--ok:#fff;--line:#2b2b2b;--on:#000}
+[data-theme=light]{color-scheme:light;--bg:#f4f5fb;--panel:#fff;--text:#1a1d2e;--dim:#6b7194;--accent:#e63e5c;--ok:#12a77a;--line:#d9dcee}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:17px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
 [hidden]{display:none!important}
@@ -25,7 +31,9 @@ h1 b{color:var(--accent)}
 h2{margin:0;font-size:15px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .sub{text-align:center;color:var(--dim);margin:0}
 .panel{background:var(--panel);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
-.primary{background:var(--accent);font-weight:700;padding:16px}
+.primary{background:var(--accent);color:var(--on);font-weight:700;padding:16px}
+.chip[aria-pressed=true],.seg[aria-pressed=true]{color:var(--on)}
+select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;width:100%}
 .mode{display:block;text-align:left;padding:16px;border:1px solid var(--line)}
 .mode strong{display:block;font-size:19px}
 .mode span{color:var(--dim);font-size:15px}
@@ -57,7 +65,7 @@ h2{margin:0;font-size:15px;color:var(--dim);font-weight:600;text-transform:upper
 <body>
 <main>
   <section id="home">
-    <h1>She's a 10, <b>but...</b></h1>
+    <h1 id="title"></h1>
     <p class="sub">A party game for one shared phone.</p>
     <div class="panel" style="margin-top:14px">
       <button class="mode" id="m1"><strong>Rate It</strong><span>Always starts at "She's a 10, but..." plus a flaw. The group argues the new score.</span></button>
@@ -66,6 +74,8 @@ h2{margin:0;font-size:15px;color:var(--dim);font-weight:600;text-transform:upper
     <div class="panel" style="margin-top:14px">
       <h2>Who is it about?</h2>
       <div class="row" id="pron"></div>
+      <h2>Theme</h2>
+      <select id="theme" aria-label="Color theme"></select>
       <h2>Categories</h2>
       <div class="row" id="cats"></div>
       <div class="row"><button class="link" id="all">Select all</button><button class="link" id="none">Clear</button></div>
@@ -95,14 +105,21 @@ h2{margin:0;font-size:15px;color:var(--dim);font-weight:600;text-transform:upper
 const L = GameLogic, D = GAME_DATA, KEY = 'shes-a-10-but-v1';
 const $ = id => document.getElementById(id);
 const rnd = Math.random;
-const def = { pron:'she', cats:[], players:[], custom:[] };
+const def = { theme:'midnight', pron:'she', cats:[], players:[], custom:[] };
 let S;
 let saved0 = {};
 try { saved0 = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; S = Object.assign({}, def, saved0); } catch(e) { S = Object.assign({}, def); }
 if (!Array.isArray(S.cats) || !('cats' in saved0)) S.cats = Object.keys(D);
 S.cats = S.cats.filter(c => D[c]);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} };
+const THEMES = { midnight: 'Midnight', ocean: 'Ocean', forest: 'Forest', sunset: 'Sunset', grape: 'Grape', mono: 'Black & White', light: 'Light' };
+function applyTheme(t){
+  if (!THEMES[t]) t = 'midnight';
+  document.documentElement.dataset.theme = t;
+  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.body).backgroundColor;
+}
 const seen = new Set();
+applyTheme(S.theme);
 let mode = 0, round = 0, scores = {};
 
 function el(tag, props, ...kids){
@@ -113,6 +130,10 @@ function el(tag, props, ...kids){
 }
 
 function renderHome(){
+  const t = $('title'); t.replaceChildren(L.PRON[S.pron].label + ' a 10, '); t.append(el('b', {}, 'but...'));
+  document.title = L.PRON[S.pron].label + ' a 10, but...';
+  const th = $('theme'); th.replaceChildren(...Object.entries(THEMES).map(([k,l]) => el('option', k===S.theme ? {value:k, selected:''} : {value:k}, l)));
+  th.onchange = () => { S.theme = th.value; applyTheme(S.theme); save(); };
   const pr = $('pron'); pr.replaceChildren();
   for (const k of ['she','he','they']) {
     const b = el('button', {class:'seg','aria-pressed':String(S.pron===k)}, L.PRON[k].label);
