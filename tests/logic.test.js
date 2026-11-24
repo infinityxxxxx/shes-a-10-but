@@ -36,4 +36,8 @@ assert.strictEqual(L.aNum(10), 'a 10');
 assert.strictEqual(L.RATE_START, 10);
 const fl = L.flaws(L.pool(D, Object.keys(D)));
 assert(fl.length > 0 && fl.every(t => t.delta < 0), 'Rate It only uses flaws');
+assert.deepStrictEqual(L.scale(false, false), [1,2,3,4,5,6,7,8,9,10]);
+assert.deepStrictEqual(L.scale(true, true), [0,1,2,3,4,5,6,7,8,9,10,11]);
+assert.deepStrictEqual(L.scale(true, false)[0], 0);
+assert.deepStrictEqual(L.scale(false, true).slice(-1), [11]);
 console.log('ok', all.length, 'traits');

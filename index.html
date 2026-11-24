@@ -18,7 +18,7 @@
 [data-theme=mono]{--bg:#000;--panel:#161616;--text:#fff;--dim:#9a9a9a;--accent:#fff;--ok:#fff;--line:#2b2b2b;--on:#000}
 [data-theme=light]{color-scheme:light;--bg:#f4f5fb;--panel:#fff;--text:#1a1d2e;--dim:#6b7194;--accent:#e63e5c;--ok:#12a77a;--line:#d9dcee}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:17px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);transition:background .4s,color .4s;font:17px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
 [hidden]{display:none!important}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 button{font:inherit;color:var(--text);border:0;border-radius:14px;padding:14px;cursor:pointer;touch-action:manipulation;transition:transform 150ms var(--out),opacity .2s;background:var(--panel)}
@@ -30,30 +30,54 @@ h1{margin:6px 0 0;font-size:30px;line-height:1.1;text-align:center}
 h1 b{color:var(--accent)}
 h2{margin:0;font-size:15px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .sub{text-align:center;color:var(--dim);margin:0}
+#home,#settings{display:flex;flex-direction:column;gap:14px}
 .panel{background:var(--panel);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .primary{background:var(--accent);color:var(--on);font-weight:700;padding:16px}
 .chip[aria-pressed=true],.seg[aria-pressed=true]{color:var(--on)}
 select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;width:100%}
-.mode{display:block;text-align:left;padding:16px;border:1px solid var(--line)}
+.mode{display:block;text-align:left;padding:16px;border:1px solid var(--line);transition:transform 150ms var(--out),border-color .2s,opacity .2s}
+.mode:hover:not(:disabled){border-color:var(--accent)}
 .mode strong{display:block;font-size:19px}
 .mode span{color:var(--dim);font-size:15px}
 .row{display:flex;gap:8px;flex-wrap:wrap}
-.chip{padding:9px 13px;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-size:15px}
+.chip{padding:9px 13px;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-size:15px;transition:transform 150ms var(--out),background .2s,border-color .2s}
 .chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);font-weight:600}
-.seg{flex:1;padding:10px}
-.seg[aria-pressed=true]{background:var(--accent);font-weight:700}
+.seg{flex:1;padding:10px;background:var(--bg);border:1px solid var(--line);transition:transform 150ms var(--out),background .2s}
+.seg[aria-pressed=true]{background:var(--accent);border-color:var(--accent);font-weight:700}
 .stage{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;text-align:center}
-.stage.enter>*{animation:in 250ms var(--out)}
-@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.stage.enter>*{animation:in 260ms var(--out) both;animation-delay:calc(var(--i,0) * 45ms)}
+@keyframes in{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.stage.enter>.num{animation:pop 420ms var(--out) both;animation-delay:calc(var(--i,0) * 45ms)}
+@keyframes pop{0%{opacity:0;transform:scale(.6)}60%{opacity:1;transform:scale(1.08)}100%{transform:scale(1)}}
+.stage.enter .card>.num{animation:pop 420ms var(--out) 120ms both}
+.pulse{animation:pulse 600ms var(--out)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 60%,transparent)}100%{box-shadow:0 0 0 18px transparent}}
+.screen>*{animation:in 260ms var(--out) both;animation-delay:calc(var(--i,0) * 40ms)}
+.card{background:var(--panel);border-radius:20px;padding:22px 18px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--line)}
+.from{font-size:15px;color:var(--dim)}
+.from b{color:var(--gold)}
 .lead{font-size:26px;font-weight:700;line-height:1.2}
 .num{font-size:112px;font-weight:800;line-height:1;color:var(--gold)}
 .but{font-size:24px;font-weight:600}
 .verdict{font-size:20px;color:var(--ok);font-weight:700}
 .verdict.down{color:var(--accent)}
 .dim{color:var(--dim);font-size:15px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px;margin:0 auto;width:100%}
-.grid button{font-size:28px;font-weight:700;padding:0;height:68px;border-radius:50%;border:1px solid var(--line)}
-.grid .sp{visibility:hidden}
+/* score wheel (iOS-style picker) */
+.wheel{position:relative;height:280px;width:200px;margin:0 auto;perspective:600px}
+.wheel:before{content:"";position:absolute;left:0;right:0;top:112px;height:56px;border-radius:16px;background:var(--panel);border:2px solid var(--accent);box-shadow:0 0 24px -8px var(--accent);pointer-events:none}
+.wheel:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:linear-gradient(var(--bg) 0,transparent 34%,transparent 66%,var(--bg) 100%)}
+.wheel ul{list-style:none;margin:0;padding:112px 0;height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;position:relative;z-index:1;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;outline:0}
+.wheel ul::-webkit-scrollbar{display:none}
+.wheel li{height:56px;line-height:56px;text-align:center;font-size:30px;font-weight:700;color:var(--dim);scroll-snap-align:center;cursor:pointer;transform-origin:50% 50%;will-change:transform,opacity;font-variant-numeric:tabular-nums}
+.wheel li.sel{color:var(--gold);font-size:40px;font-weight:800}
+.wheel li small{font-size:13px;font-weight:600;margin-left:6px;vertical-align:middle;color:var(--dim)}
+.hint{font-size:13px;color:var(--dim)}
+/* tick-mark rows, same as Imposter's Settings */
+.tog{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--bg);border:1px solid var(--line);padding:14px;border-radius:12px;cursor:pointer;transition:transform 150ms var(--out),border-color .2s}
+.tog:active{transform:scale(.98)}
+.tog span small{display:block;color:var(--dim);font-size:14px}
+.tog input{width:24px;height:24px;margin:0;flex:none;accent-color:var(--accent);cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--accent);padding:0;border:0;background:none}
 .top{display:flex;justify-content:space-between;align-items:center}
 .link{background:none;color:var(--dim);padding:8px 4px}
 .score{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
@@ -65,30 +89,42 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
 </head>
 <body>
 <main>
-  <section id="home">
+  <section id="home" class="screen">
     <div class="top"><span style="width:44px"></span><h1 id="title"></h1><button id="settingsBtn" aria-label="Settings" style="width:44px;height:44px;padding:0;font-size:20px">⚙</button></div>
     <p class="sub">A party game for one shared phone.</p>
-    <div class="panel" style="margin-top:14px">
+    <div class="panel" style="--i:1">
       <button class="mode" id="m1"><strong>Rate It</strong><span>"She's a 10, but..." plus a flaw. The group votes the new score.</span></button>
       <button class="mode" id="m2"><strong>Guess the Number</strong><span>One player looks away. The others see a number (like "She's an 8") and give hints. The guesser finds it.</span></button>
     </div>
-    <div class="panel" style="margin-top:14px">
+    <div class="panel" style="--i:2">
       <h2>Who is it about?</h2>
       <div class="row" id="pron"></div>
+    </div>
+    <div class="panel" style="--i:3">
       <h2>Categories</h2>
       <div class="row" id="cats"></div>
       <div class="row"><button class="link" id="all">Select all</button><button class="link" id="none">Clear</button></div>
+    </div>
+    <div class="panel" style="--i:4">
       <h2>Score scale</h2>
-      <div class="row"><button class="chip" id="tz" aria-pressed="false">Add 0 tick mark (really bad)</button><button class="chip" id="te" aria-pressed="false">Add 11 tick mark (really good)</button></div>
+      <label class="tog"><span>Add 0<small>Really bad</small></span><input type="checkbox" id="tz"></label>
+      <label class="tog"><span>Add 11<small>Really good</small></span><input type="checkbox" id="te"></label>
     </div>
   </section>
-  <section id="settings" hidden>
+  <section id="settings" class="screen" hidden>
     <h1>Settings</h1>
-    <div class="panel" style="margin-top:14px">
+    <div class="panel" style="--i:1">
       <h2>Theme</h2>
       <select id="theme" aria-label="Color theme"></select>
     </div>
-    <button class="primary" id="settingsBack" style="width:100%;margin-top:14px">Back</button>
+    <div class="panel" style="--i:2">
+      <h2>Feedback</h2>
+      <label class="tog"><span>Sound effects</span><input type="checkbox" id="snd"></label>
+      <label class="tog"><span>Vibration (Android only)</span><input type="checkbox" id="vib"></label>
+      <h2>Volume</h2>
+      <input type="range" id="vol" min="0.1" max="1" step="0.05" aria-label="Volume">
+    </div>
+    <button class="primary" id="settingsBack" style="width:100%;--i:3">Back</button>
   </section>
   <section id="play" hidden style="display:flex;flex-direction:column;flex:1">
     <div class="top"><button class="link" id="back">&larr; Menu</button><span class="tag" id="tag"></span></div>
@@ -102,7 +138,7 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
 const L = GameLogic, D = GAME_DATA, KEY = 'shes-a-10-but-v1';
 const $ = id => document.getElementById(id);
 const rnd = Math.random;
-const def = { theme:'midnight', pron:'she', cats:[], zero:false, eleven:false };
+const def = { theme:'midnight', pron:'she', cats:[], zero:false, eleven:false, sound:true, vibe:true, vol:.6 };
 let S;
 let saved0 = {};
 try { saved0 = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; S = Object.assign({}, def, saved0); } catch(e) { S = Object.assign({}, def); }
@@ -117,6 +153,46 @@ function applyTheme(t){
 }
 const seen = new Set();
 applyTheme(S.theme);
+
+// ---- sound / haptics, same engine as Imposter (WebAudio, no files; AudioContext is made inside a tap)
+let ac;
+function ensureAudio(){ try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(e){} }
+function tone(f, d, { type = 'sine', vol = 1, slide = 0, delay = 0 } = {}){
+  if (!S.sound || !ac) return;
+  const t = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
+  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol * S.vol * .35, t + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + .02);
+}
+function noise(d, f0, f1, vol = 1, delay = 0){ // filtered noise sweep = whoosh
+  if (!S.sound || !ac) return;
+  const t = ac.currentTime + delay, n = ac.sampleRate * d | 0, buf = ac.createBuffer(1, n, ac.sampleRate), x = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) x[i] = Math.random() * 2 - 1;
+  const src = ac.createBufferSource(), fl = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = buf; fl.type = 'bandpass'; fl.Q.value = 1.2;
+  fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + d);
+  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol * S.vol * .35, t + d * .6);
+  g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  src.connect(fl); fl.connect(g); g.connect(ac.destination); src.start(t);
+}
+const bell = (f, delay = 0, len = 1) => { tone(f, .9 * len, { vol: .8, delay }); tone(f * 2.76, .5 * len, { vol: .22, delay }); };
+let tapT; // a named sound cancels the pending generic tap blip
+const named = fn => (...a) => { clearTimeout(tapT); fn(...a); };
+const sfx = {
+  tap: () => tone(1200, .04, { vol: .5 }),
+  tick: () => tone(900, .03, { type: 'square', vol: .3 }),
+  card: named(() => { noise(.25, 400, 2600, 1.6); bell(659.25, .16); }),
+  hide: named(() => { tone(660, .12, { vol: .6 }); tone(494, .18, { vol: .6, delay: .1 }); }),
+  lock: named(() => [523.25, 659.25, 783.99].forEach((f, i) => tone(f, .25, { vol: .7, delay: i * .08 }))),
+  reveal: named(() => { noise(.3, 300, 3000, 2.2); bell(880, .22); }),
+  win: named(() => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => bell(f, i * .09, .8))),
+  close: named(() => { bell(784, 0, .8); bell(988, .12, .8); }),
+  miss: named(() => tone(220, .45, { type: 'triangle', vol: 1.2, slide: 110 }))
+};
+document.addEventListener('click', e => { if (e.target.closest('button,input[type=checkbox]')) { ensureAudio(); tapT = setTimeout(sfx.tap, 0); } }, true);
+function buzz(p){ try { if (S.vibe && navigator.vibrate) navigator.vibrate(p); } catch(e){} } // Android only, iOS ignores it
 let mode = 0;
 
 function el(tag, props, ...kids){
@@ -143,7 +219,8 @@ function renderHome(){
     b.onclick = () => { S.cats = S.cats.includes(k) ? S.cats.filter(x => x!==k) : S.cats.concat(k); save(); renderHome(); };
     cs.append(b);
   }
-  $('tz').setAttribute('aria-pressed', String(!!S.zero)); $('te').setAttribute('aria-pressed', String(!!S.eleven));
+  $('tz').checked = !!S.zero; $('te').checked = !!S.eleven;
+  $('snd').checked = !!S.sound; $('vib').checked = !!S.vibe; $('vol').value = S.vol;
   const ok = items().length > 0;
   $('m1').disabled = $('m2').disabled = !ok;
 }
@@ -153,12 +230,12 @@ function items(){
 }
 
 const stage = $('stage');
-function show(...nodes){ stage.replaceChildren(...nodes); stage.classList.remove('enter'); void stage.offsetWidth; stage.classList.add('enter'); }
+function show(...nodes){ nodes.forEach((n, i) => n.style.setProperty('--i', i)); stage.replaceChildren(...nodes); stage.classList.remove('enter'); void stage.offsetWidth; stage.classList.add('enter'); }
 const btn = (txt, fn, cls) => { const b = el('button', {class: cls||''}, txt); b.onclick = fn; return b; };
 
 function start(m){
   mode = m;
-  $('home').hidden = true; $('play').hidden = false;
+  $('home').hidden = true; $('play').hidden = false; ensureAudio();
   $('tag').textContent = m === 1 ? 'Rate It' : 'Guess the Number';
   window.scrollTo(0,0);
   m === 1 ? rate() : guessPass();
@@ -166,19 +243,49 @@ function start(m){
 function home(){ $('settings').hidden = true; $('play').hidden = true; $('home').hidden = false; renderHome(); }
 
 const lo = () => S.zero ? 0 : 1, hi = () => S.eleven ? 11 : 10;
-function dial(onPick){
-  const g = el('div', {class:'grid'});
-  for (let i = 1; i <= 9; i++) g.append(btn(String(i), () => onPick(i)));
-  g.append(S.zero ? btn('0', () => onPick(0)) : el('span', {class:'sp'}));
-  g.append(btn('10', () => onPick(10)));
-  g.append(S.eleven ? btn('11', () => onPick(11)) : el('span', {class:'sp'}));
-  return g;
+// Scroll wheel picker: flick or drag to a number, tap a number to jump to it, then lock it in.
+const H = 56;
+function wheel(start, label, onPick){
+  const vals = L.scale(S.zero, S.eleven);
+  const tags = { 0: 'really bad', 11: 'really good' };
+  const ul = el('ul', {tabindex:'0', role:'listbox', 'aria-label': label});
+  vals.forEach(v => { const li = el('li', {role:'option'}, String(v)); if (tags[v]) li.append(el('small', {}, tags[v])); ul.append(li); });
+  const box = el('div', {class:'wheel'}, ul);
+  let idx = Math.max(0, vals.indexOf(start)), raf = 0;
+  const lis = [...ul.children];
+  function paint(){
+    raf = 0;
+    const pos = ul.scrollTop / H;
+    lis.forEach((li, i) => {
+      const d = i - pos, a = Math.min(Math.abs(d), 3);
+      li.style.transform = 'rotateX(' + (-d * 20) + 'deg) scale(' + (1 - a * .12) + ')';
+      li.style.opacity = String(1 - a * .28);
+      li.classList.toggle('sel', i === idx);
+      li.setAttribute('aria-selected', String(i === idx));
+    });
+  }
+  ul.onscroll = () => {
+    const i = Math.max(0, Math.min(vals.length - 1, Math.round(ul.scrollTop / H)));
+    if (i !== idx) { idx = i; sfx.tick(); buzz(8); }
+    if (!raf) raf = requestAnimationFrame(paint);
+  };
+  ul.onclick = e => { const li = e.target.closest('li'); if (li) ul.scrollTo({top: lis.indexOf(li) * H, behavior:'smooth'}); };
+  ul.onkeydown = e => {
+    const d = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+    if (d) { e.preventDefault(); ul.scrollTo({top: Math.max(0, Math.min(vals.length - 1, idx + d)) * H, behavior:'smooth'}); }
+    if (e.key === 'Enter') { e.preventDefault(); lock.click(); }
+  };
+  const lock = btn('Lock it in', () => onPick(vals[idx]), 'primary');
+  requestAnimationFrame(() => { ul.scrollTop = idx * H; paint(); });
+  paint();
+  return [box, el('div', {class:'hint'}, 'Scroll to pick, or tap a number'), lock];
 }
 
 // Mode 1: Rate It
 function rate(){
   const it = L.pick(L.flaws(items()), seen, rnd);
   const text = L.render(it.tpl, S.pron);
+  sfx.card();
   show(
     el('div', {class:'lead'}, L.PRON[S.pron].label + ' a ' + L.RATE_START + ', but...'),
     el('div', {class:'but'}, text),
@@ -190,13 +297,16 @@ function rateDial(text){
   show(
     el('div', {class:'dim'}, L.PRON[S.pron].label + ' a ' + L.RATE_START + ', but... ' + text),
     el('div', {class:'lead'}, 'What score does the group give?'),
-    dial(n => rateDone(text, n))
+    ...wheel(L.RATE_START, 'Group score', n => rateDone(text, n))
   );
 }
 function rateDone(text, n){
+  sfx.lock(); buzz(30);
+  const d = n - L.RATE_START;
   show(
     el('div', {class:'dim'}, L.PRON[S.pron].label + ' a ' + L.RATE_START + ', but... ' + text),
     el('div', {class:'num'}, String(n)),
+    el('div', {class:'from'}, d === 0 ? 'Still a 10. Not a dealbreaker.' : (d < 0 ? 'Down ' + (-d) : 'Up ' + d) + ' from a 10'),
     btn('Next', rate, 'primary')
   );
 }
@@ -212,6 +322,7 @@ function guessPass(){
   );
 }
 function guessShow(){
+  sfx.reveal(); buzz(40);
   show(
     el('div', {class:'num'}, String(answer)),
     el('div', {class:'lead'}, L.PRON[S.pron].label + ' ' + L.aNum(answer)),
@@ -220,20 +331,19 @@ function guessShow(){
   );
 }
 function guessAsk(){
+  sfx.hide();
   show(
     el('div', {class:'lead'}, 'Guesser, what number is it?'),
-    dial(guessEnd)
+    ...wheel(Math.round((lo() + hi()) / 2), 'Your guess', guessEnd)
   );
 }
 function guessEnd(guess){
   const d = Math.abs(guess-answer);
   const msg = d === 0 ? 'Exactly right!' : d === 1 ? 'One off.' : 'Off by ' + d + '.';
-  show(
-    el('div', {class:'dim'}, 'The number was'),
-    el('div', {class:'num'}, String(answer)),
-    el('div', {class:'verdict' + (d?' down':'')}, 'Guess: ' + guess + '. ' + msg),
-    btn('Next round', guessPass, 'primary')
-  );
+  if (d === 0) { sfx.win(); buzz([60, 40, 60, 40, 120]); } else if (d === 1) { sfx.close(); buzz([50, 40, 50]); } else { sfx.miss(); buzz(200); }
+  const v = el('div', {class:'verdict' + (d?' down':'')}, 'Guess: ' + guess + '. ' + msg);
+  const card = el('div', {class:'card' + (d === 0 ? ' pulse' : '')}, el('div', {class:'dim'}, 'The number was'), el('div', {class:'num'}, String(answer)), v);
+  show(card, btn('Next round', guessPass, 'primary'));
 }
 
 $('m1').onclick = () => start(1);
@@ -243,8 +353,12 @@ $('settingsBtn').onclick = () => { $('home').hidden = true; $('settings').hidden
 $('settingsBack').onclick = home;
 $('all').onclick = () => { S.cats = Object.keys(D); save(); renderHome(); };
 $('none').onclick = () => { S.cats = []; save(); renderHome(); };
-$('tz').onclick = () => { S.zero = !S.zero; save(); renderHome(); };
-$('te').onclick = () => { S.eleven = !S.eleven; save(); renderHome(); };
+$('tz').onchange = e => { S.zero = e.target.checked; save(); buzz(10); };
+$('te').onchange = e => { S.eleven = e.target.checked; save(); buzz(10); };
+$('snd').onchange = e => { S.sound = e.target.checked; save(); ensureAudio(); sfx.tap(); };
+$('vib').onchange = e => { S.vibe = e.target.checked; save(); buzz(30); };
+$('vol').oninput = e => { S.vol = +e.target.value; };
+$('vol').onchange = () => { save(); ensureAudio(); sfx.tap(); };
 renderHome();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();

@@ -59,6 +59,13 @@
   const RATE_START = 10;
   const flaws = items => items.filter(i => i.delta < 0);
 
-  const api = { PRON, render, clamp, pool, startFor, pick, guessPoints, aNum, RATE_START, flaws };
+  // Numbers on the score wheel: 1..10, plus 0 and/or 11 when ticked.
+  function scale(zero, eleven) {
+    const out = [];
+    for (let i = zero ? 0 : 1; i <= (eleven ? 11 : 10); i++) out.push(i);
+    return out;
+  }
+
+  const api = { PRON, render, clamp, pool, startFor, pick, guessPoints, aNum, RATE_START, flaws, scale };
   if (typeof module !== 'undefined') module.exports = api; else g.GameLogic = api;
 })(typeof window !== 'undefined' ? window : globalThis);
