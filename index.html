@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f1220">
-<meta name="description" content="She's a 10, but... A party game for one shared phone. Works offline. No accounts, no ads.">
+<meta name="description" content="She's a 10, but... A party game for one shared phone. Works offline. ">
 <title>She's a 10, but...</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -51,8 +51,9 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
 .verdict{font-size:20px;color:var(--ok);font-weight:700}
 .verdict.down{color:var(--accent)}
 .dim{color:var(--dim);font-size:15px}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.grid button{font-size:24px;font-weight:700;padding:16px 0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px;margin:0 auto;width:100%}
+.grid button{font-size:28px;font-weight:700;padding:0;height:68px;border-radius:50%;border:1px solid var(--line)}
+.grid .sp{visibility:hidden}
 .top{display:flex;justify-content:space-between;align-items:center}
 .link{background:none;color:var(--dim);padding:8px 4px}
 .score{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
@@ -68,7 +69,7 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
     <div class="top"><span style="width:44px"></span><h1 id="title"></h1><button id="settingsBtn" aria-label="Settings" style="width:44px;height:44px;padding:0;font-size:20px">⚙</button></div>
     <p class="sub">A party game for one shared phone.</p>
     <div class="panel" style="margin-top:14px">
-      <button class="mode" id="m1"><strong>Rate It</strong><span>Always starts at "She's a 10, but..." plus a flaw. The group argues the new score.</span></button>
+      <button class="mode" id="m1"><strong>Rate It</strong><span>"She's a 10, but..." plus a flaw. The group votes the new score.</span></button>
       <button class="mode" id="m2"><strong>Guess the Number</strong><span>One player looks away. The others see a number (like "She's an 8") and give hints. The guesser finds it.</span></button>
     </div>
     <div class="panel" style="margin-top:14px">
@@ -77,11 +78,8 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
       <h2>Categories</h2>
       <div class="row" id="cats"></div>
       <div class="row"><button class="link" id="all">Select all</button><button class="link" id="none">Clear</button></div>
-    </div>
-    <div class="panel" style="margin-top:14px">
-      <h2>Players (optional, for Guess the Number scores)</h2>
-      <div class="row" style="flex-wrap:nowrap"><input id="pname" placeholder="Name" maxlength="20" autocomplete="off"><button id="padd" style="flex:none">Add</button></div>
-      <div class="row" id="plist"></div>
+      <h2>Score scale</h2>
+      <div class="row"><button class="chip" id="tz" aria-pressed="false">Add 0 tick mark (really bad)</button><button class="chip" id="te" aria-pressed="false">Add 11 tick mark (really good)</button></div>
     </div>
     <div class="panel" style="margin-top:14px">
       <h2>Your own "buts"</h2>
@@ -89,7 +87,6 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
       <div class="row" style="flex-wrap:nowrap"><input id="cname" placeholder="she..." maxlength="120" autocomplete="off"><button id="cadd" style="flex:none">Add</button></div>
       <div id="clist" class="row"></div>
     </div>
-    <p class="dim" style="text-align:center">All categories are on to start; turn off any you don't want, or add your own "buts". No accounts, no ads, works offline.</p>
   </section>
   <section id="settings" hidden>
     <h1>Settings</h1>
@@ -111,7 +108,7 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
 const L = GameLogic, D = GAME_DATA, KEY = 'shes-a-10-but-v1';
 const $ = id => document.getElementById(id);
 const rnd = Math.random;
-const def = { theme:'midnight', pron:'she', cats:[], players:[], custom:[] };
+const def = { theme:'midnight', pron:'she', cats:[], custom:[], zero:false, eleven:false };
 let S;
 let saved0 = {};
 try { saved0 = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; S = Object.assign({}, def, saved0); } catch(e) { S = Object.assign({}, def); }
@@ -126,7 +123,7 @@ function applyTheme(t){
 }
 const seen = new Set();
 applyTheme(S.theme);
-let mode = 0, round = 0, scores = {};
+let mode = 0;
 
 function el(tag, props, ...kids){
   const e = document.createElement(tag);
@@ -152,12 +149,7 @@ function renderHome(){
     b.onclick = () => { S.cats = S.cats.includes(k) ? S.cats.filter(x => x!==k) : S.cats.concat(k); save(); renderHome(); };
     cs.append(b);
   }
-  const pl = $('plist'); pl.replaceChildren();
-  S.players.forEach((n,i) => {
-    const x = el('button', {class:'x','aria-label':'Remove '+n}, '×');
-    x.onclick = () => { S.players.splice(i,1); save(); renderHome(); };
-    pl.append(el('span', {class:'chip'}, n+' ', x));
-  });
+  $('tz').setAttribute('aria-pressed', String(!!S.zero)); $('te').setAttribute('aria-pressed', String(!!S.eleven));
   const cl = $('clist'); cl.replaceChildren();
   S.custom.forEach((t,i) => {
     const x = el('button', {class:'x','aria-label':'Remove'}, '×');
@@ -179,7 +171,7 @@ function show(...nodes){ stage.replaceChildren(...nodes); stage.classList.remove
 const btn = (txt, fn, cls) => { const b = el('button', {class: cls||''}, txt); b.onclick = fn; return b; };
 
 function start(m){
-  mode = m; round = 0; scores = {};
+  mode = m;
   $('home').hidden = true; $('play').hidden = false;
   $('tag').textContent = m === 1 ? 'Rate It' : 'Guess the Number';
   window.scrollTo(0,0);
@@ -187,46 +179,49 @@ function start(m){
 }
 function home(){ $('settings').hidden = true; $('play').hidden = true; $('home').hidden = false; renderHome(); }
 
+const lo = () => S.zero ? 0 : 1, hi = () => S.eleven ? 11 : 10;
+function dial(onPick){
+  const g = el('div', {class:'grid'});
+  for (let i = 1; i <= 9; i++) g.append(btn(String(i), () => onPick(i)));
+  g.append(S.zero ? btn('0', () => onPick(0)) : el('span', {class:'sp'}));
+  g.append(btn('10', () => onPick(10)));
+  g.append(S.eleven ? btn('11', () => onPick(11)) : el('span', {class:'sp'}));
+  return g;
+}
+
 // Mode 1: Rate It
 function rate(){
   const it = L.pick(L.flaws(items()), seen, rnd);
   const text = L.render(it.tpl, S.pron);
-  const hasDelta = it.delta !== null;
-  const start = L.RATE_START;
   show(
-    el('div', {class:'num'}, String(start)),
-    el('div', {class:'lead'}, L.PRON[S.pron].label + ' a ' + start + ', but...'),
+    el('div', {class:'lead'}, L.PRON[S.pron].label + ' a ' + L.RATE_START + ', but...'),
     el('div', {class:'but'}, text),
-    el('div', {class:'dim'}, 'Talk it out. What is the new score?'),
-    hasDelta ? btn('Reveal the verdict', () => verdict(it, start, text), 'primary') : btn('Next', rate, 'primary')
+    el('div', {class:'dim'}, 'Talk it out, then put in the group\'s score.'),
+    btn('Put the score', () => rateDial(text), 'primary')
   );
 }
-function verdict(it, start, text){
-  const end = L.clamp(start + it.delta, 0, 10);
-  const down = end < start;
+function rateDial(text){
   show(
-    el('div', {class:'dim'}, start + ' then "' + text + '"'),
-    el('div', {class:'num'}, String(end)),
-    el('div', {class:'verdict' + (down?' down':'')}, end === start ? 'No change' : (down ? '▼ ' : '▲ ') + Math.abs(end-start) + ' ' + (down?'down':'up')),
+    el('div', {class:'dim'}, L.PRON[S.pron].label + ' a ' + L.RATE_START + ', but... ' + text),
+    el('div', {class:'lead'}, 'What score does the group give?'),
+    dial(n => rateDone(text, n))
+  );
+}
+function rateDone(text, n){
+  show(
+    el('div', {class:'dim'}, L.PRON[S.pron].label + ' a ' + L.RATE_START + ', but... ' + text),
+    el('div', {class:'num'}, String(n)),
     btn('Next', rate, 'primary')
   );
 }
 
 // Mode 2: Guess the Number
-const guesser = () => S.players.length ? S.players[round % S.players.length] : 'Guesser';
 let answer = 0;
-function scoreRow(){
-  if (!S.players.length) return null;
-  const r = el('div', {class:'score'});
-  S.players.forEach(p => r.append(el('span', {}, p + ': ' + (scores[p]||0))));
-  return r;
-}
 function guessPass(){
-  answer = Math.floor(rnd()*11);
+  answer = lo() + Math.floor(rnd()*(hi()-lo()+1));
   show(
-    el('div', {class:'lead'}, guesser() + ', look away!'),
+    el('div', {class:'lead'}, 'Guesser, look away!'),
     el('div', {class:'dim'}, 'Everyone else: when the guesser is not looking, tap below to see the number.'),
-    scoreRow() || '',
     btn('Show the number to the others', guessShow, 'primary')
   );
 }
@@ -235,27 +230,23 @@ function guessShow(){
     el('div', {class:'num'}, String(answer)),
     el('div', {class:'lead'}, L.PRON[S.pron].label + ' ' + L.aNum(answer)),
     el('div', {class:'dim'}, 'No flaw this time. Give the guesser hints about why ' + L.PRON[S.pron].s + ' is that number, without saying it.'),
-    btn('Hide it. ' + guesser() + ' looks back', guessAsk, 'primary')
+    btn('Hide it. Guesser looks back', guessAsk, 'primary')
   );
 }
 function guessAsk(){
-  const g = el('div', {class:'grid'});
-  for (let i = 0; i <= 10; i++) g.append(btn(String(i), () => guessEnd(i)));
   show(
-    el('div', {class:'lead'}, guesser() + ', what number is it?'),
-    g
+    el('div', {class:'lead'}, 'Guesser, what number is it?'),
+    dial(guessEnd)
   );
 }
 function guessEnd(guess){
-  const pts = L.guessPoints(guess, answer);
-  if (S.players.length) { const p = guesser(); scores[p] = (scores[p]||0) + pts; }
-  const msg = pts === 3 ? 'Exactly right! +3' : pts === 1 ? 'One off. +1' : 'Off by ' + Math.abs(guess-answer) + '. No points';
+  const d = Math.abs(guess-answer);
+  const msg = d === 0 ? 'Exactly right!' : d === 1 ? 'One off.' : 'Off by ' + d + '.';
   show(
     el('div', {class:'dim'}, 'The number was'),
     el('div', {class:'num'}, String(answer)),
-    el('div', {class:'verdict' + (pts?'':' down')}, 'Guess: ' + guess + '. ' + msg),
-    scoreRow() || '',
-    btn('Next round', () => { round++; guessPass(); }, 'primary')
+    el('div', {class:'verdict' + (d?' down':'')}, 'Guess: ' + guess + '. ' + msg),
+    btn('Next round', guessPass, 'primary')
   );
 }
 
@@ -266,10 +257,10 @@ $('settingsBtn').onclick = () => { $('home').hidden = true; $('settings').hidden
 $('settingsBack').onclick = home;
 $('all').onclick = () => { S.cats = Object.keys(D); save(); renderHome(); };
 $('none').onclick = () => { S.cats = []; save(); renderHome(); };
-function addPlayer(){ const v = $('pname').value.trim(); if (v && !S.players.includes(v) && S.players.length < 10) { S.players.push(v); $('pname').value=''; save(); renderHome(); } }
 function addCustom(){ const v = $('cname').value.trim(); if (v && S.custom.length < 100) { S.custom.push(v); $('cname').value=''; save(); renderHome(); } }
-$('padd').onclick = addPlayer; $('cadd').onclick = addCustom;
-$('pname').onkeydown = e => { if (e.key === 'Enter') addPlayer(); };
+$('cadd').onclick = addCustom;
+$('tz').onclick = () => { S.zero = !S.zero; save(); renderHome(); };
+$('te').onclick = () => { S.eleven = !S.eleven; save(); renderHome(); };
 $('cname').onkeydown = e => { if (e.key === 'Enter') addCustom(); };
 renderHome();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(()=>{});
