@@ -65,7 +65,7 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
 <body>
 <main>
   <section id="home">
-    <h1 id="title"></h1>
+    <div class="top"><span style="width:44px"></span><h1 id="title"></h1><button id="settingsBtn" aria-label="Settings" style="width:44px;height:44px;padding:0;font-size:20px">⚙</button></div>
     <p class="sub">A party game for one shared phone.</p>
     <div class="panel" style="margin-top:14px">
       <button class="mode" id="m1"><strong>Rate It</strong><span>Always starts at "She's a 10, but..." plus a flaw. The group argues the new score.</span></button>
@@ -74,8 +74,6 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
     <div class="panel" style="margin-top:14px">
       <h2>Who is it about?</h2>
       <div class="row" id="pron"></div>
-      <h2>Theme</h2>
-      <select id="theme" aria-label="Color theme"></select>
       <h2>Categories</h2>
       <div class="row" id="cats"></div>
       <div class="row"><button class="link" id="all">Select all</button><button class="link" id="none">Clear</button></div>
@@ -92,6 +90,14 @@ select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(
       <div id="clist" class="row"></div>
     </div>
     <p class="dim" style="text-align:center">All categories are on to start; turn off any you don't want, or add your own "buts". No accounts, no ads, works offline.</p>
+  </section>
+  <section id="settings" hidden>
+    <h1>Settings</h1>
+    <div class="panel" style="margin-top:14px">
+      <h2>Theme</h2>
+      <select id="theme" aria-label="Color theme"></select>
+    </div>
+    <button class="primary" id="settingsBack" style="width:100%;margin-top:14px">Back</button>
   </section>
   <section id="play" hidden style="display:flex;flex-direction:column;flex:1">
     <div class="top"><button class="link" id="back">&larr; Menu</button><span class="tag" id="tag"></span></div>
@@ -179,7 +185,7 @@ function start(m){
   window.scrollTo(0,0);
   m === 1 ? rate() : guessPass();
 }
-function home(){ $('play').hidden = true; $('home').hidden = false; renderHome(); }
+function home(){ $('settings').hidden = true; $('play').hidden = true; $('home').hidden = false; renderHome(); }
 
 // Mode 1: Rate It
 function rate(){
@@ -256,6 +262,8 @@ function guessEnd(guess){
 $('m1').onclick = () => start(1);
 $('m2').onclick = () => start(2);
 $('back').onclick = home;
+$('settingsBtn').onclick = () => { $('home').hidden = true; $('settings').hidden = false; scrollTo(0,0); };
+$('settingsBack').onclick = home;
 $('all').onclick = () => { S.cats = Object.keys(D); save(); renderHome(); };
 $('none').onclick = () => { S.cats = []; save(); renderHome(); };
 function addPlayer(){ const v = $('pname').value.trim(); if (v && !S.players.includes(v) && S.players.length < 10) { S.players.push(v); $('pname').value=''; save(); renderHome(); } }
