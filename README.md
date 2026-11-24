@@ -4,8 +4,8 @@ A party game for one shared phone, based on the "She's a 10, but..." trend. No a
 
 ## Modes
 
-- **Rate It**: the phone deals a starting number and a "but...". The group argues the new score, then tap to see the official verdict.
-- **Guess the Number**: one player looks away. The others see a random number and take turns saying a "but" that fits it, without saying the number. The guesser then picks the number. Exact = 3 points, one off = 1. Add player names to keep score.
+- **Rate It**: always starts at "She's a 10, but..." followed by a flaw. The group argues the new score, then tap to see the official verdict.
+- **Guess the Number**: one player looks away. The others see a set number (e.g. "She's an 8"), with no flaw, and give hints. The guesser picks the number. Exact = 3 points, one off = 1. Add player names to keep score.
 
 ## Features
 

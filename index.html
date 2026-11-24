@@ -60,8 +60,8 @@ h2{margin:0;font-size:15px;color:var(--dim);font-weight:600;text-transform:upper
     <h1>She's a 10, <b>but...</b></h1>
     <p class="sub">A party game for one shared phone.</p>
     <div class="panel" style="margin-top:14px">
-      <button class="mode" id="m1"><strong>Rate It</strong><span>A starting number and a "but...". The group argues the new score.</span></button>
-      <button class="mode" id="m2"><strong>Guess the Number</strong><span>One player looks away. The others describe the "but" and the guesser finds the number.</span></button>
+      <button class="mode" id="m1"><strong>Rate It</strong><span>Always starts at "She's a 10, but..." plus a flaw. The group argues the new score.</span></button>
+      <button class="mode" id="m2"><strong>Guess the Number</strong><span>One player looks away. The others see a number (like "She's an 8") and give hints. The guesser finds it.</span></button>
     </div>
     <div class="panel" style="margin-top:14px">
       <h2>Who is it about?</h2>
@@ -162,10 +162,10 @@ function home(){ $('play').hidden = true; $('home').hidden = false; renderHome()
 
 // Mode 1: Rate It
 function rate(){
-  const it = L.pick(items(), seen, rnd);
+  const it = L.pick(L.flaws(items()), seen, rnd);
   const text = L.render(it.tpl, S.pron);
   const hasDelta = it.delta !== null;
-  const start = hasDelta ? L.startFor(it.delta, rnd) : 6 + Math.floor(rnd()*5);
+  const start = L.RATE_START;
   show(
     el('div', {class:'num'}, String(start)),
     el('div', {class:'lead'}, L.PRON[S.pron].label + ' a ' + start + ', but...'),
@@ -206,8 +206,8 @@ function guessPass(){
 function guessShow(){
   show(
     el('div', {class:'num'}, String(answer)),
-    el('div', {class:'lead'}, L.PRON[S.pron].label + ' a ' + answer + ', but...'),
-    el('div', {class:'dim'}, 'Take turns saying the "but" that fits this number. Do not say the number out loud.'),
+    el('div', {class:'lead'}, L.PRON[S.pron].label + ' ' + L.aNum(answer)),
+    el('div', {class:'dim'}, 'No flaw this time. Give the guesser hints about why ' + L.PRON[S.pron].s + ' is that number, without saying it.'),
     btn('Hide it. ' + guesser() + ' looks back', guessAsk, 'primary')
   );
 }
