@@ -40,4 +40,8 @@ assert.deepStrictEqual(L.scale(false, false), [1,2,3,4,5,6,7,8,9,10]);
 assert.deepStrictEqual(L.scale(true, true), [0,1,2,3,4,5,6,7,8,9,10,11]);
 assert.deepStrictEqual(L.scale(true, false)[0], 0);
 assert.deepStrictEqual(L.scale(false, true).slice(-1), [11]);
+assert.strictEqual(L.NOTES.length, 12, 'notes for every score 0..11');
+assert(L.NOTES.flat().length >= 50);
+assert.strictEqual(new Set(L.NOTES.flat()).size, L.NOTES.flat().length, 'no duplicate notes');
+L.NOTES.forEach((list, n) => assert(list.includes(L.noteFor(n, new Set(), Math.random))));
 console.log('ok', all.length, 'traits');

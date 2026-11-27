@@ -164,6 +164,7 @@ function applyTheme(t){
   const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.body).backgroundColor;
 }
 const seen = new Set();
+const noteSeen = L.NOTES.map(() => new Set()); // no repeats until a score has used all its lines
 applyTheme(S.theme);
 
 // ---- sound / haptics, same engine as Imposter (WebAudio, no files; AudioContext is made inside a tap)
@@ -314,11 +315,10 @@ function rateDial(text){
 }
 function rateDone(text, n){
   sfx.lock(); buzz(30);
-  const d = n - L.RATE_START;
   show(
     el('div', {class:'dim'}, L.PRON[S.pron].label + ' a ' + L.RATE_START + ', but... ' + text),
     el('div', {class:'num'}, String(n)),
-    el('div', {class:'from'}, d === 0 ? 'Still a 10. Not a dealbreaker.' : (d < 0 ? 'Down ' + (-d) : 'Up ' + d) + ' from a 10'),
+    el('div', {class:'verdict' + (n < 5 ? ' down' : '')}, L.noteFor(n, noteSeen[n], rnd)),
     btn('Next', rate, 'primary')
   );
 }

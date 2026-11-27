@@ -66,6 +66,23 @@
     return out;
   }
 
-  const api = { PRON, render, clamp, pool, startFor, pick, guessPoints, aNum, RATE_START, flaws, scale };
+  // Rate It reaction lines, by the score the group gives (0..11).
+  const NOTES = [
+    ['Run. Do not look back.', 'Absolutely not. Ever.', 'Delete the number.', 'Call the authorities.', 'Worst of all time.'],
+    ['Yikes.', 'A walking red flag.', 'Not even as a joke.', 'That is a disaster.', 'Block and move on.'],
+    ['Oof, that hurts.', 'Hard pass.', 'The ick is permanent.', 'Yeah... no.'],
+    ['Rough. Really rough.', 'Only if the world is ending.', 'That flaw did damage.', 'Big yikes energy.'],
+    ['Below average, sorry.', 'Not looking good.', 'Could be worse. Barely.', 'You can do better.'],
+    ['Mid.', 'Perfectly... okay.', 'Kinda mid, not gonna lie.', 'Coin flip.', 'Meh.'],
+    ['Slightly above mid.', 'There is some potential.', 'Not bad, not great.', 'One more chance.'],
+    ['Pretty solid!', 'We can work with that.', 'Respectable.', 'Green-ish flag.'],
+    ['Really good!', 'Worth it.', 'Barely even a problem.', 'That is a keeper.'],
+    ['Wow, that is awesome!', 'Almost perfect.', 'Elite behavior.', 'Wife or husband material.'],
+    ['Still a 10. Not a dealbreaker.', 'Flaw? What flaw?', 'Flawless. No notes.', 'Lock this one down.'],
+    ['GOAT.', 'Greatest of all time.', 'Best person ever.', 'The flaw made it better.', 'Marry immediately.']
+  ];
+  const noteFor = (n, seen, rnd) => pick(NOTES[n].map(text => ({ id: text, text })), seen, rnd).text;
+
+  const api = { PRON, render, clamp, pool, startFor, pick, guessPoints, aNum, RATE_START, flaws, scale, NOTES, noteFor };
   if (typeof module !== 'undefined') module.exports = api; else g.GameLogic = api;
 })(typeof window !== 'undefined' ? window : globalThis);
