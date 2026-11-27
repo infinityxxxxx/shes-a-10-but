@@ -97,6 +97,13 @@ input,textarea{caret-color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 html{scrollbar-color:var(--line) transparent}
 .svgi{width:1.15em;height:1.15em;vertical-align:-.2em;flex:none}
+/* more games drop-down (same in all five games) */
+.more-games{width:min(100%,420px);margin:16px auto;text-align:center;flex:none}
+.more-games summary{list-style:none;cursor:pointer;padding:14px;border-radius:14px;border:1px solid color-mix(in srgb,currentColor 25%,transparent);font-weight:700}
+.more-games summary::-webkit-details-marker{display:none}
+.more-games summary::after{content:" \25BE"}
+.more-games[open] summary::after{content:" \25B4"}
+.more-games a{display:block;margin-top:8px;padding:14px;border-radius:14px;background:color-mix(in srgb,currentColor 10%,transparent);color:inherit;text-decoration:none}
 </style>
 </head>
 <body>
@@ -122,6 +129,7 @@ html{scrollbar-color:var(--line) transparent}
       <label class="tog"><span>Add 0<small>Really bad</small></span><input type="checkbox" id="tz"></label>
       <label class="tog"><span>Add 11<small>Really good</small></span><input type="checkbox" id="te"></label>
     </div>
+    <details class="more-games"><summary>More games</summary><a href="https://infinityxxxxx.github.io/imposter/">Imposter</a><a href="https://infinityxxxxx.github.io/would-you-rather/">Would You Rather</a><a href="https://infinityxxxxx.github.io/most-likely-to/">Most Likely To...</a><a href="https://infinityxxxxx.github.io/hot-take-spectrum/">Hot Take Spectrum</a></details>
   </section>
   <section id="settings" class="screen" hidden>
     <h1>Settings</h1>
@@ -167,45 +175,33 @@ const seen = new Set();
 const noteSeen = L.NOTES.map(() => new Set()); // no repeats until a score has used all its lines
 applyTheme(S.theme);
 
-// ---- sound / haptics, same engine as Imposter (WebAudio, no files; AudioContext is made inside a tap)
+// ---- party sound kit: the SAME block in all five games (Imposter, Would You Rather, She's a 10, Most Likely To, Hot Take). Change one, change all.
 let ac;
-function ensureAudio(){ try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch(e){} }
-function tone(f, d, { type = 'sine', vol = 1, slide = 0, delay = 0 } = {}){
-  if (!S.sound || !ac) return;
-  const t = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
-  o.type = type; o.frequency.setValueAtTime(f, t);
-  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
-  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol * S.vol * .35, t + .01);
-  g.gain.exponentialRampToValueAtTime(.0001, t + d);
-  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + d + .02);
-}
-function noise(d, f0, f1, vol = 1, delay = 0){ // filtered noise sweep = whoosh
-  if (!S.sound || !ac) return;
-  const t = ac.currentTime + delay, n = ac.sampleRate * d | 0, buf = ac.createBuffer(1, n, ac.sampleRate), x = buf.getChannelData(0);
-  for (let i = 0; i < n; i++) x[i] = Math.random() * 2 - 1;
-  const src = ac.createBufferSource(), fl = ac.createBiquadFilter(), g = ac.createGain();
-  src.buffer = buf; fl.type = 'bandpass'; fl.Q.value = 1.2;
-  fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + d);
-  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol * S.vol * .35, t + d * .6);
-  g.gain.exponentialRampToValueAtTime(.0001, t + d);
-  src.connect(fl); fl.connect(g); g.connect(ac.destination); src.start(t);
-}
-const bell = (f, delay = 0, len = 1) => { tone(f, .9 * len, { vol: .8, delay }); tone(f * 2.76, .5 * len, { vol: .22, delay }); };
-let tapT; // a named sound cancels the pending generic tap blip
-const named = fn => (...a) => { clearTimeout(tapT); fn(...a); };
-const sfx = {
-  tap: () => tone(1200, .04, { vol: .5 }),
-  tick: () => tone(900, .03, { type: 'square', vol: .3 }),
-  card: named(() => { noise(.25, 400, 2600, 1.6); bell(659.25, .16); }),
-  hide: named(() => { tone(660, .12, { vol: .6 }); tone(494, .18, { vol: .6, delay: .1 }); }),
-  lock: named(() => [523.25, 659.25, 783.99].forEach((f, i) => tone(f, .25, { vol: .7, delay: i * .08 }))),
-  reveal: named(() => { noise(.3, 300, 3000, 2.2); bell(880, .22); }),
-  win: named(() => [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => bell(f, i * .09, .8))),
-  close: named(() => { bell(784, 0, .8); bell(988, .12, .8); }),
-  miss: named(() => tone(220, .45, { type: 'triangle', vol: 1.2, slide: 110 }))
+function ensureAudio(){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}}
+function tone(f,d,{type='sine',vol=1,slide=0,delay=0}={}){if(!S.sound||!ac)return;const t=ac.currentTime+delay,o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol*S.vol*.35,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d+.02)}
+function noise(d,f0,f1,vol=1,delay=0){if(!S.sound||!ac)return;const t=ac.currentTime+delay,n=ac.sampleRate*d|0,buf=ac.createBuffer(1,n,ac.sampleRate),x=buf.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const src=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain();src.buffer=buf;fl.type='bandpass';fl.Q.value=1.2;fl.frequency.setValueAtTime(f0,t);fl.frequency.exponentialRampToValueAtTime(f1,t+d);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(vol*S.vol*.35,t+d*.6);g.gain.exponentialRampToValueAtTime(.0001,t+d);src.connect(fl);fl.connect(g);g.connect(ac.destination);src.start(t)}
+const bell=(f,delay=0,len=1)=>{tone(f,.9*len,{vol:.8,delay});tone(f*2.76,.5*len,{vol:.22,delay})};
+let tapT;const named=fn=>(...a)=>{clearTimeout(tapT);fn(...a)}; // a named sound cancels the pending generic tap blip
+const sfx={
+ tap:()=>tone(1200,.04,{vol:.5}), // any button
+ tick:()=>tone(900,.03,{type:'square',vol:.3}), // scroll wheel, slider, countdown
+ start:named(()=>{bell(784,0,.8);bell(988,.12,.8)}), // game begins
+ card:named(()=>{noise(.25,400,2600,1.4);bell(659.25,.16)}), // new card / pass the phone
+ hide:named(()=>{tone(660,.12,{vol:.6});tone(494,.18,{vol:.6,delay:.1})}),
+ lock:named(()=>[523.25,659.25,783.99].forEach((f,i)=>tone(f,.25,{vol:.7,delay:i*.08}))), // vote or answer locked in
+ reveal:named(()=>{noise(.3,300,3000,2.2);bell(880,.22)}),
+ win:named(()=>[523.25,659.25,783.99,1046.5].forEach((f,i)=>bell(f,i*.09,.8))),
+ close:named(()=>{bell(784,0,.8);bell(988,.12,.8)}),
+ miss:named(()=>tone(220,.45,{type:'triangle',vol:1.2,slide:110})),
+ ding:named(()=>bell(1320,0,1.4)), // timer up
+ final:named(()=>{noise(.9,200,2500,2.4);tone(110,.5,{type:'triangle',vol:1.4,slide:55,delay:.9})}), // big drum-roll reveal
+ dot:i=>tone(600+i*90,.12,{vol:.5,delay:.25+i*.11})
 };
-document.addEventListener('click', e => { if (e.target.closest('button,input[type=checkbox]')) { ensureAudio(); tapT = setTimeout(sfx.tap, 0); } }, true);
-function buzz(p){ try { if (S.vibe && navigator.vibrate) navigator.vibrate(p); } catch(e){} } // Android only, iOS ignores it
+// vibration strengths (ms), used by name everywhere
+const BUZZ={tap:12,tick:8,select:15,card:15,lock:30,reveal:40,close:[50,40,50],win:[60,40,60,40,120],miss:200,alarm:[300,100,300,100,300]};
+function buzz(p){try{if(S.vibe&&navigator.vibrate)navigator.vibrate(p)}catch(e){}} // Android only, iOS ignores it
+document.addEventListener('click',e=>{if(!e.target.closest('button,input[type=checkbox],select,summary,.more-games a'))return;ensureAudio();buzz(BUZZ.tap);tapT=setTimeout(sfx.tap,0)},true); // every tap: blip + light buzz
+// ---- end sound kit
 let mode = 0;
 
 function el(tag, props, ...kids){
@@ -279,7 +275,7 @@ function wheel(start, label, onPick){
   }
   ul.onscroll = () => {
     const i = Math.max(0, Math.min(vals.length - 1, Math.round(ul.scrollTop / H)));
-    if (i !== idx) { idx = i; sfx.tick(); buzz(8); }
+    if (i !== idx) { idx = i; sfx.tick(); buzz(BUZZ.tick); }
     if (!raf) raf = requestAnimationFrame(paint);
   };
   ul.onclick = e => { const li = e.target.closest('li'); if (li) ul.scrollTo({top: lis.indexOf(li) * H, behavior:'smooth'}); };
@@ -298,7 +294,7 @@ function wheel(start, label, onPick){
 function rate(){
   const it = L.pick(L.flaws(items()), seen, rnd);
   const text = L.render(it.tpl, S.pron);
-  sfx.card();
+  sfx.card(); buzz(BUZZ.card);
   show(
     el('div', {class:'lead'}, L.PRON[S.pron].label + ' a ' + L.RATE_START + ', but...'),
     el('div', {class:'but'}, text),
@@ -314,7 +310,7 @@ function rateDial(text){
   );
 }
 function rateDone(text, n){
-  sfx.lock(); buzz(30);
+  sfx.lock(); buzz(BUZZ.lock);
   show(
     el('div', {class:'dim'}, L.PRON[S.pron].label + ' a ' + L.RATE_START + ', but... ' + text),
     el('div', {class:'num'}, String(n)),
@@ -334,7 +330,7 @@ function guessPass(){
   );
 }
 function guessShow(){
-  sfx.reveal(); buzz(40);
+  sfx.reveal(); buzz(BUZZ.reveal);
   show(
     el('div', {class:'num'}, String(answer)),
     el('div', {class:'lead'}, L.PRON[S.pron].label + ' ' + L.aNum(answer)),
@@ -343,7 +339,7 @@ function guessShow(){
   );
 }
 function guessAsk(){
-  sfx.hide();
+  sfx.hide(); buzz(BUZZ.card);
   show(
     el('div', {class:'lead'}, 'Guesser, what number is it?'),
     ...wheel(Math.round((lo() + hi()) / 2), 'Your guess', guessEnd)
@@ -352,7 +348,7 @@ function guessAsk(){
 function guessEnd(guess){
   const d = Math.abs(guess-answer);
   const msg = d === 0 ? 'Exactly right!' : d === 1 ? 'One off.' : 'Off by ' + d + '.';
-  if (d === 0) { sfx.win(); buzz([60, 40, 60, 40, 120]); } else if (d === 1) { sfx.close(); buzz([50, 40, 50]); } else { sfx.miss(); buzz(200); }
+  if (d === 0) { sfx.win(); buzz(BUZZ.win); } else if (d === 1) { sfx.close(); buzz(BUZZ.close); } else { sfx.miss(); buzz(BUZZ.miss); }
   const v = el('div', {class:'verdict' + (d?' down':'')}, 'Guess: ' + guess + '. ' + msg);
   const card = el('div', {class:'card' + (d === 0 ? ' pulse' : '')}, el('div', {class:'dim'}, 'The number was'), el('div', {class:'num'}, String(answer)), v);
   show(card, btn('Next round', guessPass, 'primary'));
@@ -365,10 +361,10 @@ $('settingsBtn').onclick = () => { $('home').hidden = true; $('settings').hidden
 $('settingsBack').onclick = home;
 $('all').onclick = () => { S.cats = Object.keys(D); save(); renderHome(); };
 $('none').onclick = () => { S.cats = []; save(); renderHome(); };
-$('tz').onchange = e => { S.zero = e.target.checked; save(); buzz(10); };
-$('te').onchange = e => { S.eleven = e.target.checked; save(); buzz(10); };
+$('tz').onchange = e => { S.zero = e.target.checked; save(); };
+$('te').onchange = e => { S.eleven = e.target.checked; save(); };
 $('snd').onchange = e => { S.sound = e.target.checked; save(); ensureAudio(); sfx.tap(); };
-$('vib').onchange = e => { S.vibe = e.target.checked; save(); buzz(30); };
+$('vib').onchange = e => { S.vibe = e.target.checked; save(); buzz(BUZZ.lock); };
 $('vol').oninput = e => { S.vol = +e.target.value; };
 $('vol').onchange = () => { save(); ensureAudio(); sfx.tap(); };
 renderHome();
